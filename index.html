@@ -103,3 +103,175 @@ function render() {
 
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>RulettStadistic</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #0f172a;
+  color: #fff;
+  margin: 0;
+  padding: 20px;
+}
+h1 {
+  text-align: center;
+  color: #38bdf8;
+}
+input, button {
+  width: 100%;
+  padding: 10px;
+  margin: 5px 0;
+  font-size: 16px;
+}
+button {
+  background: #22c55e;
+  border: none;
+  cursor: pointer;
+}
+button:hover {
+  background: #16a34a;
+}
+.box {
+  background: #020617;
+  padding: 15px;
+  margin-top: 15px;
+  border-radius: 8px;
+}
+.number {
+  display: inline-block;
+  margin: 3px;
+  padding: 6px 8px;
+  background: #1e293b;
+  border-radius: 4px;
+}
+.hot {
+  background: #dc2626;
+}
+.stats-item {
+  margin: 5px 0;
+}
+.color-box {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  vertical-align: middle;
+  border-radius: 3px;
+}
+</style>
+</head>
+<body>
+
+<h1>🎰 RulettStadistic</h1>
+
+<div class="box">
+  <input type="number" id="num" placeholder="Introduce número (0-36)">
+  <button onclick="addNumber()">Añadir número</button>
+</div>
+
+<div class="box">
+  <h3>Historial de números</h3>
+  <div id="history"></div>
+</div>
+
+<div class="box">
+  <h3>Transiciones (qué suele salir después de cada número)</h3>
+  <div id="transitions"></div>
+</div>
+
+<div class="box">
+  <h3>Estadísticas generales</h3>
+  <div id="stats"></div>
+</div>
+
+<div class="box">
+  <h3>Panel final resumido</h3>
+  <div id="panel"></div>
+</div>
+
+<script>
+let historyArr = [];
+let count = {};
+let colors = {0:'🟢',1:'🔴',2:'⚫',3:'🔴',4:'⚫',5:'🔴',6:'⚫',7:'🔴',8:'⚫',9:'🔴',10:'⚫',11:'⚫',12:'🔴',13:'⚫',14:'🔴',15:'⚫',16:'🔴',17:'⚫',18:'🔴',19:'🔴',20:'⚫',21:'🔴',22:'⚫',23:'🔴',24:'⚫',25:'🔴',26:'⚫',27:'🔴',28:'⚫',29:'🔴',30:'⚫',31:'⚫',32:'🔴',33:'⚫',34:'🔴',35:'⚫',36:'🔴'};
+let highLow = (n) => n>=1 && n<=18 ? "Bajo" : n>=19 && n<=36 ? "Alto" : "N/A";
+let parImpar = (n) => n===0 ? "N/A" : n%2===0 ? "Par" : "Impar";
+
+function addNumber() {
+  const input = document.getElementById("num");
+  let n = parseInt(input.value);
+  if (isNaN(n) || n<0 || n>36) return;
+  historyArr.push(n);
+  count[n] = (count[n] || 0) +1;
+  input.value = "";
+  render();
+}
+
+function render() {
+  // Historial
+  const h = document.getElementById("history");
+  h.innerHTML = historyArr.map(n => `<span class="number">${n}</span>`).join("");
+
+  // Estadísticas generales
+  let total = historyArr.length;
+  let reds=0, blacks=0, greens=0, pars=0, impares=0, altos=0, bajos=0;
+  Object.values(count).forEach((v,i)=>{});
+  historyArr.forEach(n=>{
+    if(colors[n]==='🔴') reds++;
+    else if(colors[n]==='⚫') blacks++;
+    else if(colors[n]==='🟢') greens++;
+    if(parImpar(n)==='Par') pars++; else if(parImpar(n)==='Impar') impares++;
+    if(highLow(n)==='Alto') altos++; else if(highLow(n)==='Bajo') bajos++;
+  });
+
+  const s = document.getElementById("stats");
+  s.innerHTML = `
+    <div class="stats-item"><span class="color-box" style="background:red"></span> Rojo: ${reds} (${Math.round(reds/total*100)||0}%)</div>
+    <div class="stats-item"><span class="color-box" style="background:black"></span> Negro: ${blacks} (${Math.round(blacks/total*100)||0}%)</div>
+    <div class="stats-item"><span class="color-box" style="background:green"></span> Verde: ${greens} (${Math.round(greens/total*100)||0}%)</div>
+    <div class="stats-item">Par: ${pars} (${Math.round(pars/total*100)||0}%)</div>
+    <div class="stats-item">Impar: ${impares} (${Math.round(impares/total*100)||0}%)</div>
+    <div class="stats-item">Alto: ${altos} (${Math.round(altos/total*100)||0}%)</div>
+    <div class="stats-item">Bajo: ${bajos} (${Math.round(bajos/total*100)||0}%)</div>
+  `;
+
+  // Transiciones
+  let transitionsObj = {};
+  for(let i=0;i<historyArr.length-1;i++){
+    let current = historyArr[i];
+    let next = historyArr[i+1];
+    if(!transitionsObj[current]) transitionsObj[current]={};
+    transitionsObj[current][next] = (transitionsObj[current][next]||0)+1;
+  }
+  const t = document.getElementById("transitions");
+  let tHTML='';
+  Object.keys(transitionsObj).sort((a,b)=>a-b).forEach(n=>{
+    let arr = transitionsObj[n];
+    let sorted = Object.keys(arr).sort((a,b)=>arr[b]-arr[a]);
+    let line = `<div><strong>${n} →</strong> ${sorted.map(x=>x+' ('+arr[x]+')').join(', ')}</div>`;
+    tHTML+=line;
+  });
+  t.innerHTML=tHTML;
+
+  // Panel final resumido
+  const p = document.getElementById("panel");
+  let dominantColor = reds>=blacks ? (reds>=greens?'Rojo':'Verde') : 'Negro';
+  let dominantPar = pars>=impares?'Par':'Impar';
+  let dominantHighLow = altos>=bajos?'Alto':'Bajo';
+  let lastNum = historyArr[historyArr.length-1]||'N/A';
+  let afterLast = transitionsObj[lastNum] ? Object.keys(transitionsObj[lastNum]).sort((a,b)=>transitionsObj[lastNum][b]-transitionsObj[lastNum][a]).slice(0,3).map(x=>x+' ('+transitionsObj[lastNum][x]+')').join(', ') : 'N/A';
+  p.innerHTML = `
+    <div>Último número: <strong>${lastNum}</strong></div>
+    <div>Transiciones siguientes más frecuentes: ${afterLast}</div>
+    <div>Color dominante: <strong>${dominantColor}</strong></div>
+    <div>Par/Impar dominante: <strong>${dominantPar}</strong></div>
+    <div>Alto/Bajo dominante: <strong>${dominantHighLow}</strong></div>
+  `;
+}
+</script>
+
+</body>
+</html>
