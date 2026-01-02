@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>RulettStadistic</title>
+<title>RulettStadistic – Ruleta Europea</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {
@@ -22,17 +22,13 @@ input, textarea, button {
   margin: 6px 0;
   font-size: 16px;
 }
-textarea {
-  min-height: 80px;
-}
+textarea { min-height: 80px; }
 button {
   background: #22c55e;
   border: none;
   cursor: pointer;
 }
-button:hover {
-  background: #16a34a;
-}
+button:hover { background: #16a34a; }
 .box {
   background: #020617;
   padding: 15px;
@@ -46,20 +42,20 @@ button:hover {
   background: #1e293b;
   border-radius: 4px;
 }
-.stats-item { margin: 5px 0; }
-.color-box {
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  margin-right: 6px;
-  vertical-align: middle;
-  border-radius: 3px;
+.trans-line { margin-bottom: 6px; }
+.badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
 }
+.red { background:#dc2626; }
+.black { background:#000; }
+.green { background:#16a34a; }
 </style>
 </head>
 <body>
 
-<h1>🎰 RulettStadistic</h1>
+<h1>🎡 RulettStadistic – Ruleta Europea</h1>
 
 <div class="box">
   <input type="number" id="num" placeholder="Introduce número (0-36)">
@@ -67,7 +63,7 @@ button:hover {
 </div>
 
 <div class="box">
-  <textarea id="bulk" placeholder="Pega aquí muchos números (ej: 4,17,32,0,9,21)"></textarea>
+  <textarea id="bulk" placeholder="Pega muchos números (ej: 17,4,32,0,9)"></textarea>
   <button onclick="addBulk()">Añadir lista</button>
 </div>
 
@@ -77,100 +73,57 @@ button:hover {
 </div>
 
 <div class="box">
-  <h3>Transiciones</h3>
+  <h3>Transiciones (después de cada número)</h3>
   <div id="transitions"></div>
-</div>
-
-<div class="box">
-  <h3>Estadísticas</h3>
-  <div id="stats"></div>
-</div>
-
-<div class="box">
-  <h3>Panel final</h3>
-  <div id="panel"></div>
 </div>
 
 <script>
 let historyArr = [];
-let count = {};
-let colors = {0:'🟢',1:'🔴',2:'⚫',3:'🔴',4:'⚫',5:'🔴',6:'⚫',7:'🔴',8:'⚫',9:'🔴',10:'⚫',11:'⚫',12:'🔴',13:'⚫',14:'🔴',15:'⚫',16:'🔴',17:'⚫',18:'🔴',19:'🔴',20:'⚫',21:'🔴',22:'⚫',23:'🔴',24:'⚫',25:'🔴',26:'⚫',27:'🔴',28:'⚫',29:'🔴',30:'⚫',31:'⚫',32:'🔴',33:'⚫',34:'🔴',35:'⚫',36:'🔴'};
-let highLow = n => n>=1 && n<=18 ? "Bajo" : n>=19 && n<=36 ? "Alto" : "N/A";
+let colors = {0:'green',1:'red',2:'black',3:'red',4:'black',5:'red',6:'black',7:'red',8:'black',9:'red',10:'black',11:'black',12:'red',13:'black',14:'red',15:'black',16:'red',17:'black',18:'red',19:'red',20:'black',21:'red',22:'black',23:'red',24:'black',25:'red',26:'black',27:'red',28:'black',29:'red',30:'black',31:'black',32:'red',33:'black',34:'red',35:'black',36:'red'};
 let parImpar = n => n===0 ? "N/A" : n%2===0 ? "Par" : "Impar";
+let altoBajo = n => n>=1 && n<=18 ? "Bajo" : n>=19 ? "Alto" : "N/A";
 
-function addNumber() {
-  const input = document.getElementById("num");
-  let n = parseInt(input.value);
-  if(isNaN(n) || n<0 || n>36) return;
-  pushNumber(n);
-  input.value = "";
-}
-
-function addBulk() {
-  const txt = document.getElementById("bulk").value;
-  const nums = txt.split(/[\s,;]+/);
-  nums.forEach(v=>{
-    let n = parseInt(v);
-    if(!isNaN(n) && n>=0 && n<=36) pushNumber(n);
-  });
-  document.getElementById("bulk").value = "";
-}
-
-function pushNumber(n){
+function addNumber(){
+  let n = parseInt(document.getElementById("num").value);
+  if(isNaN(n)||n<0||n>36) return;
   historyArr.push(n);
-  count[n] = (count[n]||0)+1;
+  document.getElementById("num").value="";
   render();
 }
 
-function render() {
+function addBulk(){
+  let txt = document.getElementById("bulk").value;
+  txt.split(/[\s,;]+/).forEach(v=>{
+    let n=parseInt(v);
+    if(!isNaN(n)&&n>=0&&n<=36) historyArr.push(n);
+  });
+  document.getElementById("bulk").value="";
+  render();
+}
+
+function render(){
   document.getElementById("history").innerHTML =
     historyArr.map(n=>`<span class="number">${n}</span>`).join("");
 
-  let total = historyArr.length;
-  let reds=0, blacks=0, greens=0, pars=0, impares=0, altos=0, bajos=0;
-
-  historyArr.forEach(n=>{
-    if(colors[n]==='🔴') reds++;
-    else if(colors[n]==='⚫') blacks++;
-    else greens++;
-    if(parImpar(n)==='Par') pars++;
-    else if(parImpar(n)==='Impar') impares++;
-    if(highLow(n)==='Alto') altos++;
-    else if(highLow(n)==='Bajo') bajos++;
-  });
-
-  document.getElementById("stats").innerHTML = `
-    <div class="stats-item">Rojo: ${reds}</div>
-    <div class="stats-item">Negro: ${blacks}</div>
-    <div class="stats-item">Verde: ${greens}</div>
-    <div class="stats-item">Par: ${pars}</div>
-    <div class="stats-item">Impar: ${impares}</div>
-    <div class="stats-item">Alto: ${altos}</div>
-    <div class="stats-item">Bajo: ${bajos}</div>
-    <div class="stats-item">Total números: ${total}</div>
-  `;
-
-  let trans = {};
+  let trans={};
   for(let i=0;i<historyArr.length-1;i++){
-    let a = historyArr[i], b = historyArr[i+1];
+    let a=historyArr[i], b=historyArr[i+1];
     if(!trans[a]) trans[a]={};
-    trans[a][b] = (trans[a][b]||0)+1;
+    trans[a][b]=(trans[a][b]||0)+1;
   }
-  let tHTML='';
-  Object.keys(trans).sort((a,b)=>a-b).forEach(n=>{
-    let arr = trans[n];
-    let sorted = Object.keys(arr).sort((a,b)=>arr[b]-arr[a]);
-    tHTML += `<div><b>${n} →</b> ${sorted.map(x=>x+"("+arr[x]+")").join(", ")}</div>`;
-  });
-  document.getElementById("transitions").innerHTML = tHTML;
 
-  let last = historyArr[historyArr.length-1];
-  document.getElementById("panel").innerHTML = `
-    <div>Último número: <b>${last ?? "N/A"}</b></div>
-    <div>Color dominante: <b>${reds>=blacks?"Rojo":"Negro"}</b></div>
-    <div>Par / Impar dominante: <b>${pars>=impares?"Par":"Impar"}</b></div>
-    <div>Alto / Bajo dominante: <b>${altos>=bajos?"Alto":"Bajo"}</b></div>
-  `;
+  let html="";
+  Object.keys(trans).sort((a,b)=>a-b).forEach(n=>{
+    html+=`<div class="trans-line"><b>${n} →</b><br>`;
+    Object.keys(trans[n]).sort((a,b)=>trans[n][b]-trans[n][a]).forEach(x=>{
+      html+=`${x} · 
+        <span class="badge ${colors[x]}">${colors[x]}</span> · 
+        ${parImpar(x)} · ${altoBajo(x)} 
+        (${trans[n][x]} veces)<br>`;
+    });
+    html+=`</div>`;
+  });
+  document.getElementById("transitions").innerHTML=html;
 }
 </script>
 
