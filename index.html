@@ -4,127 +4,160 @@
 <meta charset="UTF-8">
 <title>RulettStadistic – Ruleta Europea</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
 body {
   font-family: Arial, sans-serif;
-  background: #0f172a;
-  color: #fff;
   margin: 0;
   padding: 20px;
+  color: #fff;
+  background: 
+    linear-gradient(rgba(0,0,0,.7), rgba(0,0,0,.7)),
+    url("https://images.unsplash.com/photo-1583337130417-3346a1be7dee");
+  background-size: cover;
+  background-attachment: fixed;
 }
-h1 {
-  text-align: center;
-  color: #38bdf8;
+
+h1 { text-align:center; color:#facc15; }
+
+.box {
+  background: rgba(2,6,23,.85);
+  padding: 15px;
+  margin-top: 15px;
+  border-radius: 10px;
 }
+
 input, textarea, button {
   width: 100%;
   padding: 10px;
   margin: 6px 0;
   font-size: 16px;
 }
-textarea { min-height: 80px; }
+
 button {
-  background: #22c55e;
-  border: none;
-  cursor: pointer;
+  background:#16a34a;
+  border:none;
+  color:#fff;
+  cursor:pointer;
 }
-button:hover { background: #16a34a; }
-.box {
-  background: #020617;
-  padding: 15px;
-  margin-top: 15px;
-  border-radius: 8px;
-}
+
+button:hover { background:#15803d; }
+
 .number {
-  display: inline-block;
-  margin: 3px;
-  padding: 6px 8px;
-  background: #1e293b;
-  border-radius: 4px;
+  display:inline-block;
+  margin:3px;
+  padding:6px 8px;
+  background:#1e293b;
+  border-radius:4px;
 }
-.trans-line { margin-bottom: 6px; }
+
 .badge {
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 12px;
+  padding:2px 6px;
+  border-radius:4px;
+  font-size:12px;
 }
+
 .red { background:#dc2626; }
 .black { background:#000; }
 .green { background:#16a34a; }
 </style>
 </head>
+
 <body>
 
 <h1>🎡 RulettStadistic – Ruleta Europea</h1>
 
 <div class="box">
-  <input type="number" id="num" placeholder="Introduce número (0-36)">
-  <button onclick="addNumber()">Añadir número</button>
+<input type="number" id="num" placeholder="Número (0-36)">
+<button onclick="addNumber()">Añadir número</button>
+<textarea id="bulk" placeholder="Pega muchos números (17,4,32,0,9)"></textarea>
+<button onclick="addBulk()">Añadir lista</button>
 </div>
 
 <div class="box">
-  <textarea id="bulk" placeholder="Pega muchos números (ej: 17,4,32,0,9)"></textarea>
-  <button onclick="addBulk()">Añadir lista</button>
+<h3>Historial</h3>
+<div id="history"></div>
 </div>
 
 <div class="box">
-  <h3>Historial</h3>
-  <div id="history"></div>
+<h3>Transiciones</h3>
+<div id="transitions"></div>
 </div>
 
 <div class="box">
-  <h3>Transiciones (después de cada número)</h3>
-  <div id="transitions"></div>
+<h3>🔍 Análisis avanzado (200+ números)</h3>
+<div id="advanced">Introduce al menos 200 números.</div>
 </div>
 
 <script>
-let historyArr = [];
-let colors = {0:'green',1:'red',2:'black',3:'red',4:'black',5:'red',6:'black',7:'red',8:'black',9:'red',10:'black',11:'black',12:'red',13:'black',14:'red',15:'black',16:'red',17:'black',18:'red',19:'red',20:'black',21:'red',22:'black',23:'red',24:'black',25:'red',26:'black',27:'red',28:'black',29:'red',30:'black',31:'black',32:'red',33:'black',34:'red',35:'black',36:'red'};
-let parImpar = n => n===0 ? "N/A" : n%2===0 ? "Par" : "Impar";
-let altoBajo = n => n>=1 && n<=18 ? "Bajo" : n>=19 ? "Alto" : "N/A";
+let historyArr=[];
+let colors={0:'green',1:'red',2:'black',3:'red',4:'black',5:'red',6:'black',7:'red',8:'black',9:'red',10:'black',11:'black',12:'red',13:'black',14:'red',15:'black',16:'red',17:'black',18:'red',19:'red',20:'black',21:'red',22:'black',23:'red',24:'black',25:'red',26:'black',27:'red',28:'black',29:'red',30:'black',31:'black',32:'red',33:'black',34:'red',35:'black',36:'red'};
+
+const docena=n=>n>=1&&n<=12?1:n<=24?2:3;
+const columna=n=>n%3===1?1:n%3===2?2:3;
 
 function addNumber(){
-  let n = parseInt(document.getElementById("num").value);
-  if(isNaN(n)||n<0||n>36) return;
-  historyArr.push(n);
-  document.getElementById("num").value="";
-  render();
+  let n=parseInt(num.value);
+  if(n>=0&&n<=36){ historyArr.push(n); num.value=""; render(); }
 }
 
 function addBulk(){
-  let txt = document.getElementById("bulk").value;
-  txt.split(/[\s,;]+/).forEach(v=>{
+  bulk.value.split(/[\s,;]+/).forEach(v=>{
     let n=parseInt(v);
-    if(!isNaN(n)&&n>=0&&n<=36) historyArr.push(n);
+    if(n>=0&&n<=36) historyArr.push(n);
   });
-  document.getElementById("bulk").value="";
-  render();
+  bulk.value=""; render();
 }
 
 function render(){
-  document.getElementById("history").innerHTML =
-    historyArr.map(n=>`<span class="number">${n}</span>`).join("");
+  history.innerHTML=historyArr.map(n=>`<span class="number">${n}</span>`).join("");
 
   let trans={};
   for(let i=0;i<historyArr.length-1;i++){
-    let a=historyArr[i], b=historyArr[i+1];
+    let a=historyArr[i],b=historyArr[i+1];
     if(!trans[a]) trans[a]={};
     trans[a][b]=(trans[a][b]||0)+1;
   }
 
-  let html="";
-  Object.keys(trans).sort((a,b)=>a-b).forEach(n=>{
-    html+=`<div class="trans-line"><b>${n} →</b><br>`;
+  let tHTML="";
+  Object.keys(trans).forEach(n=>{
+    tHTML+=`<b>${n} →</b><br>`;
     Object.keys(trans[n]).sort((a,b)=>trans[n][b]-trans[n][a]).forEach(x=>{
-      html+=`${x} · 
-        <span class="badge ${colors[x]}">${colors[x]}</span> · 
-        ${parImpar(x)} · ${altoBajo(x)} 
-        (${trans[n][x]} veces)<br>`;
+      tHTML+=`${x} <span class="badge ${colors[x]}">${colors[x]}</span> (${trans[n][x]})<br>`;
     });
-    html+=`</div>`;
+    tHTML+="<br>";
   });
-  document.getElementById("transitions").innerHTML=html;
+  transitions.innerHTML=tHTML;
+
+  if(historyArr.length<200){
+    advanced.innerHTML="Introduce al menos 200 números.";
+    return;
+  }
+
+  let last=historyArr.at(-1);
+  let data=trans[last]||{};
+  let total=Object.values(data).reduce((a,b)=>a+b,0);
+
+  let colorC={},docC={},colC={};
+  Object.keys(data).forEach(n=>{
+    let c=data[n];
+    colorC[colors[n]]=(colorC[colors[n]]||0)+c;
+    docC[docena(n)]=(docC[docena(n)]||0)+c;
+    colC[columna(n)]=(colC[columna(n)]||0)+c;
+  });
+
+  let top10=Object.keys(data).sort((a,b)=>data[b]-data[a]).slice(0,10);
+
+  advanced.innerHTML=`
+<b>${last} →</b> ${top10.join(", ")}<br><br>
+Color dominante: <b>${maxKey(colorC)} (${perc(colorC)}%)</b><br>
+Docena dominante: <b>${maxKey(docC)}ª (${perc(docC)}%)</b><br>
+Columna dominante: <b>${maxKey(colC)}ª (${perc(colC)}%)</b>
+`;
 }
+
+const maxKey=o=>Object.keys(o).reduce((a,b)=>o[a]>o[b]?a:b);
+const perc=o=>Math.round((Math.max(...Object.values(o))/Object.values(o).reduce((a,b)=>a+b,0))*100);
 </script>
 
 </body>
