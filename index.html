@@ -3,203 +3,149 @@
 <head>
 <meta charset="UTF-8">
 <title>RulettStadistic</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
 body {
     margin: 0;
     font-family: Arial, sans-serif;
-    background: url("roulette-bg.jpg") no-repeat center center fixed;
+    background: url('ruleta.jpg') no-repeat center center fixed;
     background-size: cover;
-    color: #fff;
+    color: white;
 }
 
 .overlay {
-    background: rgba(0,0,0,0.65);
+    background: rgba(0,0,0,0.75);
     min-height: 100vh;
     padding: 20px;
 }
 
-.container {
-    max-width: 950px;
-    margin: auto;
-}
-
 h1 {
     text-align: center;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 }
 
 .panel {
     background: rgba(20,20,20,0.9);
-    border-radius: 10px;
     padding: 15px;
+    border-radius: 10px;
     margin-bottom: 15px;
 }
 
 input, textarea, button {
-    padding: 10px;
-    font-size: 15px;
-}
-
-textarea {
     width: 100%;
-    height: 80px;
-    resize: vertical;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: none;
 }
 
 button {
+    background: #c9a227;
+    font-weight: bold;
     cursor: pointer;
-    background: #cfa343;
-    border: none;
-    border-radius: 5px;
-    margin-top: 8px;
 }
 
-button:hover {
-    background: #e2b84f;
-}
-
-.history {
-    max-height: 120px;
-    overflow-y: auto;
-    font-size: 14px;
-}
-
-.result {
+.resultado {
+    margin-top: 10px;
     font-size: 15px;
-    line-height: 1.6;
-}
-
-.small {
-    font-size: 13px;
-    opacity: 0.85;
 }
 </style>
 </head>
 
 <body>
 <div class="overlay">
-<div class="container">
 
 <h1>🎰 RulettStadistic</h1>
-<p class="small" style="text-align:center;">Análisis avanzado – Ruleta Europea</p>
 
 <div class="panel">
-    <h3>➕ Añadir número individual</h3>
-    <input type="number" id="numInput" min="0" max="36">
-    <button onclick="addNumber()">Añadir</button>
-</div>
-
-<div class="panel">
-    <h3>⚡ Añadir muchos números de golpe</h3>
-    <textarea id="bulkInput" placeholder="Ejemplo: 17, 4, 23, 8, 0, 32"></textarea>
-    <button onclick="addBulk()">Añadir todos</button>
-    <p class="small">Puedes separarlos por comas, espacios o saltos de línea</p>
+<h3>Añadir número individual</h3>
+<input type="number" id="numIndividual" min="0" max="36">
+<button onclick="addSingle()">Añadir</button>
 </div>
 
 <div class="panel">
-    <h3>📜 Historial (<span id="count">0</span>)</h3>
-    <div class="history" id="history"></div>
+<h3>Añadir hasta 200 números de golpe</h3>
+<textarea id="bulkNumbers" rows="4" placeholder="Ej: 17,32,0,4,21..."></textarea>
+<button onclick="addBulk()">Añadir todos</button>
 </div>
 
 <div class="panel">
-    <h3>🔍 Análisis del último número</h3>
-    <div class="result" id="analysis">
-        Añade al menos 200 números para activar el análisis.
-    </div>
+<h3>Análisis tras número</h3>
+<input type="number" id="numAnalizar" min="0" max="36">
+<button onclick="analizar()">Analizar</button>
+<div class="resultado" id="resultado"></div>
 </div>
 
-</div>
 </div>
 
 <script>
-const numbers = [];
-const redNumbers = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+let historial = [];
 
-function colorOf(n){
-    if(n === 0) return "verde";
-    return redNumbers.includes(n) ? "roja" : "negra";
-}
-function docenaOf(n){
-    if(n>=1 && n<=12) return 1;
-    if(n>=13 && n<=24) return 2;
-    if(n>=25 && n<=36) return 3;
-    return 0;
-}
-function columnaOf(n){
-    if(n===0) return 0;
-    return ((n-1)%3)+1;
-}
+const colores = {
+0: "Verde",
+1:"Roja",3:"Roja",5:"Roja",7:"Roja",9:"Roja",12:"Roja",14:"Roja",16:"Roja",18:"Roja",
+19:"Roja",21:"Roja",23:"Roja",25:"Roja",27:"Roja",30:"Roja",32:"Roja",34:"Roja",36:"Roja"
+};
 
-function addNumber(){
-    const input = document.getElementById("numInput");
-    const n = parseInt(input.value);
-    if(isNaN(n) || n<0 || n>36) return;
-    numbers.push(n);
-    input.value = "";
-    updateUI();
+function getColor(n){ return colores[n] || "Negra"; }
+function docena(n){ if(n==0) return "0"; if(n<=12) return "1ª"; if(n<=24) return "2ª"; return "3ª"; }
+function columna(n){ if(n==0) return "0"; return ((n-1)%3)+1; }
+
+function addSingle(){
+    let n = parseInt(numIndividual.value);
+    if(n>=0 && n<=36) historial.push(n);
+    alert("Total números: "+historial.length);
 }
 
 function addBulk(){
-    const text = document.getElementById("bulkInput").value;
-    const values = text.split(/[\s,]+/);
-    values.forEach(v=>{
-        const n = parseInt(v);
-        if(!isNaN(n) && n>=0 && n<=36){
-            numbers.push(n);
-        }
-    });
-    document.getElementById("bulkInput").value = "";
-    updateUI();
+    let nums = bulkNumbers.value.split(",").map(n=>parseInt(n.trim())).filter(n=>n>=0 && n<=36);
+    historial.push(...nums);
+    alert("Total números: "+historial.length);
 }
 
-function updateUI(){
-    document.getElementById("count").textContent = numbers.length;
-    document.getElementById("history").textContent = numbers.join(", ");
-    if(numbers.length >= 200) analyze();
-}
-
-function analyze(){
-    const last = numbers[numbers.length-1];
-    const follow = {};
-
-    let colorCount = {roja:0, negra:0, verde:0};
-    let docCount = {1:0,2:0,3:0};
-    let colCount = {1:0,2:0,3:0};
-
-    for(let i=0;i<numbers.length-1;i++){
-        if(numbers[i] === last){
-            const next = numbers[i+1];
-            follow[next] = (follow[next]||0)+1;
-            colorCount[colorOf(next)]++;
-            if(docenaOf(next)) docCount[docenaOf(next)]++;
-            if(columnaOf(next)) colCount[columnaOf(next)]++;
-        }
+function analizar(){
+    if(historial.length < 200){
+        resultado.innerHTML = "⚠️ Añade al menos 200 números";
+        return;
     }
 
-    const top10 = Object.entries(follow)
+    let n = parseInt(numAnalizar.value);
+    let siguientes = [];
+
+    for(let i=0;i<historial.length-1;i++){
+        if(historial[i] === n) siguientes.push(historial[i+1]);
+    }
+
+    let freq = {};
+    siguientes.forEach(x=>freq[x]=(freq[x]||0)+1);
+
+    let top = Object.entries(freq)
         .sort((a,b)=>b[1]-a[1])
         .slice(0,10)
-        .map(e=>e[0])
-        .join(", ");
+        .map(x=>x[0]);
 
-    const total = Object.values(follow).reduce((a,b)=>a+b,0) || 1;
+    let colorCount={}, docCount={}, colCount={};
 
-    function best(obj){
+    siguientes.forEach(x=>{
+        let c=getColor(x), d=docena(x), col=columna(x);
+        colorCount[c]=(colorCount[c]||0)+1;
+        docCount[d]=(docCount[d]||0)+1;
+        colCount[col]=(colCount[col]||0)+1;
+    });
+
+    function topKey(obj){
         return Object.entries(obj).sort((a,b)=>b[1]-a[1])[0];
     }
 
-    const bestColor = best(colorCount);
-    const bestDoc = best(docCount);
-    const bestCol = best(colCount);
+    let c=topKey(colorCount);
+    let d=topKey(docCount);
+    let col=topKey(colCount);
 
-    document.getElementById("analysis").innerHTML = `
-        <b>${last}</b> → ${top10}<br><br>
-        🎨 Color dominante: <b>${bestColor[0]}</b> (${Math.round(bestColor[1]/total*100)}%)<br>
-        🔢 Docena dominante: <b>${bestDoc[0]}ª</b> (${Math.round(bestDoc[1]/total*100)}%)<br>
-        📊 Columna dominante: <b>${bestCol[0]}ª</b> (${Math.round(bestCol[1]/total*100)}%)
-    `;
+    resultado.innerHTML = `
+<b>${n}</b> → ${top.join(", ")}<br><br>
+🎨 Color: ${c[0]} (${Math.round(c[1]/siguientes.length*100)}%)<br>
+📦 Docena: ${d[0]} (${Math.round(d[1]/siguientes.length*100)}%)<br>
+📊 Columna: ${col[0]} (${Math.round(col[1]/siguientes.length*100)}%)
+`;
 }
 </script>
 
