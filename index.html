@@ -3,55 +3,65 @@
 <head>
 <meta charset="UTF-8">
 <title>RulettStadistic</title>
+
 <style>
-body {
+html, body {
     margin: 0;
+    padding: 0;
+    height: 100%;
     font-family: Arial, sans-serif;
-    background: url('ruleta.jpg') no-repeat center center fixed;
+}
+
+body {
+    background-image: url("https://images.unsplash.com/photo-1542314831-068cd1dbfeeb");
     background-size: cover;
-    color: white;
+    background-position: center;
+    background-attachment: fixed;
 }
 
 .overlay {
-    background: rgba(0,0,0,0.75);
     min-height: 100vh;
+    background: rgba(0,0,0,0.75);
     padding: 20px;
+    box-sizing: border-box;
 }
 
 h1 {
     text-align: center;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
 }
 
 .panel {
     background: rgba(20,20,20,0.9);
-    padding: 15px;
     border-radius: 10px;
+    padding: 15px;
     margin-bottom: 15px;
 }
 
 input, textarea, button {
     width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    border-radius: 5px;
+    padding: 10px;
+    margin-top: 8px;
+    border-radius: 6px;
     border: none;
+    font-size: 15px;
 }
 
 button {
     background: #c9a227;
+    color: black;
     font-weight: bold;
-    cursor: pointer;
 }
 
 .resultado {
     margin-top: 10px;
-    font-size: 15px;
+    line-height: 1.5;
 }
 </style>
 </head>
 
 <body>
+
 <div class="overlay">
 
 <h1>🎰 RulettStadistic</h1>
@@ -80,71 +90,78 @@ button {
 <script>
 let historial = [];
 
-const colores = {
-0: "Verde",
-1:"Roja",3:"Roja",5:"Roja",7:"Roja",9:"Roja",12:"Roja",14:"Roja",16:"Roja",18:"Roja",
-19:"Roja",21:"Roja",23:"Roja",25:"Roja",27:"Roja",30:"Roja",32:"Roja",34:"Roja",36:"Roja"
-};
+const rojos = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
 
-function getColor(n){ return colores[n] || "Negra"; }
-function docena(n){ if(n==0) return "0"; if(n<=12) return "1ª"; if(n<=24) return "2ª"; return "3ª"; }
-function columna(n){ if(n==0) return "0"; return ((n-1)%3)+1; }
+function color(n){
+    if(n===0) return "Verde";
+    return rojos.includes(n) ? "Roja" : "Negra";
+}
+
+function docena(n){
+    if(n===0) return "0";
+    if(n<=12) return "1ª";
+    if(n<=24) return "2ª";
+    return "3ª";
+}
+
+function columna(n){
+    if(n===0) return "0";
+    return ((n-1)%3)+1;
+}
 
 function addSingle(){
-    let n = parseInt(numIndividual.value);
+    let n = Number(numIndividual.value);
     if(n>=0 && n<=36) historial.push(n);
     alert("Total números: "+historial.length);
 }
 
 function addBulk(){
-    let nums = bulkNumbers.value.split(",").map(n=>parseInt(n.trim())).filter(n=>n>=0 && n<=36);
+    let nums = bulkNumbers.value.split(",")
+        .map(x=>Number(x.trim()))
+        .filter(x=>x>=0 && x<=36);
     historial.push(...nums);
     alert("Total números: "+historial.length);
 }
 
 function analizar(){
     if(historial.length < 200){
-        resultado.innerHTML = "⚠️ Añade al menos 200 números";
+        resultado.innerHTML = "⚠️ Introduce al menos 200 números";
         return;
     }
 
-    let n = parseInt(numAnalizar.value);
-    let siguientes = [];
+    let base = Number(numAnalizar.value);
+    let sig = [];
 
     for(let i=0;i<historial.length-1;i++){
-        if(historial[i] === n) siguientes.push(historial[i+1]);
+        if(historial[i]===base) sig.push(historial[i+1]);
     }
 
     let freq = {};
-    siguientes.forEach(x=>freq[x]=(freq[x]||0)+1);
+    sig.forEach(n=>freq[n]=(freq[n]||0)+1);
 
-    let top = Object.entries(freq)
+    let top10 = Object.entries(freq)
         .sort((a,b)=>b[1]-a[1])
         .slice(0,10)
-        .map(x=>x[0]);
+        .map(e=>e[0]);
 
-    let colorCount={}, docCount={}, colCount={};
+    let stats = {color:{}, doc:{}, col:{}};
 
-    siguientes.forEach(x=>{
-        let c=getColor(x), d=docena(x), col=columna(x);
-        colorCount[c]=(colorCount[c]||0)+1;
-        docCount[d]=(docCount[d]||0)+1;
-        colCount[col]=(colCount[col]||0)+1;
+    sig.forEach(n=>{
+        stats.color[color(n)] = (stats.color[color(n)]||0)+1;
+        stats.doc[docena(n)] = (stats.doc[docena(n)]||0)+1;
+        stats.col[columna(n)] = (stats.col[columna(n)]||0)+1;
     });
 
-    function topKey(obj){
-        return Object.entries(obj).sort((a,b)=>b[1]-a[1])[0];
+    function best(o){
+        let t = Object.entries(o).sort((a,b)=>b[1]-a[1])[0];
+        return `${t[0]} (${Math.round(t[1]/sig.length*100)}%)`;
     }
 
-    let c=topKey(colorCount);
-    let d=topKey(docCount);
-    let col=topKey(colCount);
-
     resultado.innerHTML = `
-<b>${n}</b> → ${top.join(", ")}<br><br>
-🎨 Color: ${c[0]} (${Math.round(c[1]/siguientes.length*100)}%)<br>
-📦 Docena: ${d[0]} (${Math.round(d[1]/siguientes.length*100)}%)<br>
-📊 Columna: ${col[0]} (${Math.round(col[1]/siguientes.length*100)}%)
+<b>${base}</b> → ${top10.join(", ")}<br><br>
+🎨 Color: ${best(stats.color)}<br>
+📦 Docena: ${best(stats.doc)}<br>
+📊 Columna: ${best(stats.col)}
 `;
 }
 </script>
