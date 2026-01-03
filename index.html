@@ -9,7 +9,7 @@
 body {
     margin: 0;
     font-family: Arial, sans-serif;
-    background: url("https://images.unsplash.com/photo-1601933470096-0e34634ffcde") no-repeat center center fixed;
+    background: url("roulette-bg.jpg") no-repeat center center fixed;
     background-size: cover;
     color: #fff;
 }
@@ -20,26 +20,32 @@ body {
     padding: 20px;
 }
 
-h1 {
-    text-align: center;
-    margin-bottom: 10px;
-}
-
 .container {
-    max-width: 900px;
+    max-width: 950px;
     margin: auto;
 }
 
+h1 {
+    text-align: center;
+    margin-bottom: 5px;
+}
+
 .panel {
-    background: rgba(20,20,20,0.85);
+    background: rgba(20,20,20,0.9);
     border-radius: 10px;
     padding: 15px;
     margin-bottom: 15px;
 }
 
-input, button {
+input, textarea, button {
     padding: 10px;
-    font-size: 16px;
+    font-size: 15px;
+}
+
+textarea {
+    width: 100%;
+    height: 80px;
+    resize: vertical;
 }
 
 button {
@@ -47,7 +53,7 @@ button {
     background: #cfa343;
     border: none;
     border-radius: 5px;
-    margin-left: 5px;
+    margin-top: 8px;
 }
 
 button:hover {
@@ -67,7 +73,7 @@ button:hover {
 
 .small {
     font-size: 13px;
-    opacity: 0.9;
+    opacity: 0.85;
 }
 </style>
 </head>
@@ -77,13 +83,19 @@ button:hover {
 <div class="container">
 
 <h1>🎰 RulettStadistic</h1>
-<p class="small" style="text-align:center;">Análisis avanzado de ruleta europea</p>
+<p class="small" style="text-align:center;">Análisis avanzado – Ruleta Europea</p>
 
 <div class="panel">
-    <h3>➕ Añadir número</h3>
+    <h3>➕ Añadir número individual</h3>
     <input type="number" id="numInput" min="0" max="36">
     <button onclick="addNumber()">Añadir</button>
-    <p class="small">Introduce números de 0 a 36</p>
+</div>
+
+<div class="panel">
+    <h3>⚡ Añadir muchos números de golpe</h3>
+    <textarea id="bulkInput" placeholder="Ejemplo: 17, 4, 23, 8, 0, 32"></textarea>
+    <button onclick="addBulk()">Añadir todos</button>
+    <p class="small">Puedes separarlos por comas, espacios o saltos de línea</p>
 </div>
 
 <div class="panel">
@@ -93,7 +105,9 @@ button:hover {
 
 <div class="panel">
     <h3>🔍 Análisis del último número</h3>
-    <div class="result" id="analysis">Añade al menos 200 números para activar el análisis.</div>
+    <div class="result" id="analysis">
+        Añade al menos 200 números para activar el análisis.
+    </div>
 </div>
 
 </div>
@@ -127,6 +141,19 @@ function addNumber(){
     updateUI();
 }
 
+function addBulk(){
+    const text = document.getElementById("bulkInput").value;
+    const values = text.split(/[\s,]+/);
+    values.forEach(v=>{
+        const n = parseInt(v);
+        if(!isNaN(n) && n>=0 && n<=36){
+            numbers.push(n);
+        }
+    });
+    document.getElementById("bulkInput").value = "";
+    updateUI();
+}
+
 function updateUI(){
     document.getElementById("count").textContent = numbers.length;
     document.getElementById("history").textContent = numbers.join(", ");
@@ -145,7 +172,6 @@ function analyze(){
         if(numbers[i] === last){
             const next = numbers[i+1];
             follow[next] = (follow[next]||0)+1;
-
             colorCount[colorOf(next)]++;
             if(docenaOf(next)) docCount[docenaOf(next)]++;
             if(columnaOf(next)) colCount[columnaOf(next)]++;
